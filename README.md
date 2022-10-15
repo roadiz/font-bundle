@@ -46,7 +46,7 @@ return [
 
 ## Configuration
 
-- Create folders: `var/files` for font storage
+- Create folders: `var/files/fonts` for fonts storage
 - Copy and merge `@RoadizFontBundle/config/packages/*` files into your project `config/packages` folder
 ```yaml
 # config/routes.yaml
@@ -65,3 +65,18 @@ doctrine:
                 prefix: 'RZ\Roadiz\FontBundle\Entity'
                 alias: RoadizFontBundle
 ```
+- Create a new Roadiz role: `ROLE_ACCESS_FONTS`
+- Add new `roadiz_rozier` admin sub-entry
+```yaml
+---
+roadiz_rozier:
+    entries:
+        construction:
+            subentries:
+                manage_fonts:
+                    name: 'manage.fonts'
+                    route: fontsHomePage
+                    icon: 'uk-icon-rz-fontes'
+                    roles: ['ROLE_ACCESS_FONTS']
+```
+- Perform *Doctrine Migrations* to create `fonts` table
