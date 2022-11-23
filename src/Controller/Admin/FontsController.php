@@ -5,8 +5,9 @@ declare(strict_types=1);
 namespace RZ\Roadiz\FontBundle\Controller\Admin;
 
 use JMS\Serializer\SerializerInterface;
+use League\Flysystem\FilesystemException;
+use League\Flysystem\FilesystemOperator;
 use RZ\Roadiz\Core\AbstractEntities\PersistableInterface;
-use RZ\Roadiz\Documents\Packages;
 use RZ\Roadiz\FontBundle\Entity\Font;
 use RZ\Roadiz\FontBundle\Event\Font\PreUpdatedFontEvent;
 use RZ\Roadiz\FontBundle\Form\FontType;
@@ -21,20 +22,15 @@ use Themes\Rozier\Controllers\AbstractAdminController;
 
 class FontsController extends AbstractAdminController
 {
-    private Packages $packages;
+    private FilesystemOperator $fontStorage;
 
-    /**
-     * @param Packages $packages
-     * @param SerializerInterface $serializer
-     * @param UrlGeneratorInterface $urlGenerator
-     */
     public function __construct(
-        Packages $packages,
+        FilesystemOperator $fontStorage,
         SerializerInterface $serializer,
         UrlGeneratorInterface $urlGenerator
     ) {
         parent::__construct($serializer, $urlGenerator);
-        $this->packages = $packages;
+        $this->fontStorage = $fontStorage;
     }
 
     /**
@@ -145,13 +141,14 @@ class FontsController extends AbstractAdminController
      * @param Request $request
      * @param int $id
      *
-     * @return Response
+     * @return BinaryFileResponse
+     * @throws FilesystemException
      */
-    public function downloadAction(Request $request, int $id)
+    public function downloadAction(Request $request, int $id): BinaryFileResponse
     {
         $this->denyAccessUnlessGranted($this->getRequiredRole());
 
-        /** @var \RZ\Roadiz\FontBundle\Entity\Font|null $font */
+        /** @var Font|null $font */
         $font = $this->em()->find(Font::class, $id);
 
         if ($font !== null) {
@@ -161,19 +158,19 @@ class FontsController extends AbstractAdminController
             $zip->open($file, \ZipArchive::CREATE);
 
             if ("" != $font->getEOTFilename()) {
-                $zip->addFile($this->packages->getFontsPath($font->getEOTRelativeUrl()), $font->getEOTFilename());
+                $zip->addFromString($font->getEOTFilename(), $this->fontStorage->read($font->getEOTRelativeUrl()));
             }
             if ("" != $font->getSVGFilename()) {
-                $zip->addFile($this->packages->getFontsPath($font->getSVGRelativeUrl()), $font->getSVGFilename());
+                $zip->addFromString($font->getSVGFilename(), $this->fontStorage->read($font->getSVGRelativeUrl()));
             }
             if ("" != $font->getWOFFFilename()) {
-                $zip->addFile($this->packages->getFontsPath($font->getWOFFRelativeUrl()), $font->getWOFFFilename());
+                $zip->addFromString($font->getWOFFFilename(), $this->fontStorage->read($font->getWOFFRelativeUrl()));
             }
             if ("" != $font->getWOFF2Filename()) {
-                $zip->addFile($this->packages->getFontsPath($font->getWOFF2RelativeUrl()), $font->getWOFF2Filename());
+                $zip->addFromString($font->getWOFF2Filename(), $this->fontStorage->read($font->getWOFF2RelativeUrl()));
             }
             if ("" != $font->getOTFFilename()) {
-                $zip->addFile($this->packages->getFontsPath($font->getOTFRelativeUrl()), $font->getOTFFilename());
+                $zip->addFromString($font->getOTFFilename(), $this->fontStorage->read($font->getOTFRelativeUrl()));
             }
             // Close and send to users
             $zip->close();

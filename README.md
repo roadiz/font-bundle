@@ -47,6 +47,16 @@ return [
 ## Configuration
 
 - Create folders: `var/files/fonts` for fonts storage
+- Add Flysystem storage definition
+```yaml
+# config/packages/flysystem.yaml
+flysystem:
+    storages:
+        font.storage:
+            adapter: 'local'
+            options:
+                directory: '%kernel.project_dir%/var/files/fonts'
+```
 - Copy and merge `@RoadizFontBundle/config/packages/*` files into your project `config/packages` folder
 ```yaml
 # config/routes.yaml

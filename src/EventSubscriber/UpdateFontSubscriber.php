@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\FontBundle\EventSubscriber;
 
+use League\Flysystem\FilesystemException;
 use RZ\Roadiz\FontBundle\Doctrine\EventSubscriber\FontLifeCycleSubscriber;
 use RZ\Roadiz\FontBundle\Event\Font\PreUpdatedFontEvent;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
@@ -17,10 +18,7 @@ final class UpdateFontSubscriber implements EventSubscriberInterface
 {
     private FontLifeCycleSubscriber $fontSubscriber;
 
-    /**
-     * @param FontLifeCycleSubscriber $fontSubscriber
-     */
-    public function __construct(\RZ\Roadiz\FontBundle\Doctrine\EventSubscriber\FontLifeCycleSubscriber $fontSubscriber)
+    public function __construct(FontLifeCycleSubscriber $fontSubscriber)
     {
         $this->fontSubscriber = $fontSubscriber;
     }
@@ -36,6 +34,9 @@ final class UpdateFontSubscriber implements EventSubscriberInterface
         ];
     }
 
+    /**
+     * @throws FilesystemException
+     */
     public function onPreUpdatedFont(PreUpdatedFontEvent $event)
     {
         $font = $event->getFont();

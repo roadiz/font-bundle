@@ -7,28 +7,23 @@ namespace RZ\Roadiz\FontBundle\Doctrine\EventSubscriber;
 use Doctrine\Common\EventSubscriber;
 use Doctrine\ORM\Events;
 use Doctrine\Persistence\Event\LifecycleEventArgs;
+use League\Flysystem\FilesystemException;
+use League\Flysystem\FilesystemOperator;
 use Psr\Log\LoggerInterface;
-use RZ\Roadiz\Documents\Packages;
 use RZ\Roadiz\FontBundle\Entity\Font;
-use Symfony\Component\Filesystem\Exception\IOException;
-use Symfony\Component\Filesystem\Filesystem;
 
 /**
  * Handle file management on Fonts lifecycle events.
  */
 final class FontLifeCycleSubscriber implements EventSubscriber
 {
-    private Packages $assetPackages;
     private LoggerInterface $logger;
+    private FilesystemOperator $fontStorage;
 
-    /**
-     * @param Packages $assetPackages
-     * @param LoggerInterface $logger
-     */
-    public function __construct(Packages $assetPackages, LoggerInterface $logger)
+    public function __construct(FilesystemOperator $fontStorage, LoggerInterface $logger)
     {
-        $this->assetPackages = $assetPackages;
         $this->logger = $logger;
+        $this->fontStorage = $fontStorage;
     }
 
     /**
@@ -71,6 +66,7 @@ final class FontLifeCycleSubscriber implements EventSubscriber
 
     /**
      * @param LifecycleEventArgs $args
+     * @throws FilesystemException
      */
     public function postPersist(LifecycleEventArgs $args)
     {
@@ -83,6 +79,7 @@ final class FontLifeCycleSubscriber implements EventSubscriber
 
     /**
      * @param LifecycleEventArgs $args
+     * @throws FilesystemException
      */
     public function postUpdate(LifecycleEventArgs $args)
     {
@@ -93,62 +90,51 @@ final class FontLifeCycleSubscriber implements EventSubscriber
         }
     }
 
-    /**
-     * @param LifecycleEventArgs $args
-     */
     public function preRemove(LifecycleEventArgs $args)
     {
         $entity = $args->getObject();
         // perhaps you only want to act on some "Product" entity
         if ($entity instanceof Font) {
-            $fileSystem = new Filesystem();
             try {
-                if (null !== $entity->getSVGFilename()) {
-                    $svgFilePath = $this->assetPackages->getFontsPath($entity->getSVGRelativeUrl());
-                    $this->logger->info('Font file deleted', ['file' => $svgFilePath]);
-                    $fileSystem->remove($svgFilePath);
+                if (null !== $entity->getSVGFilename() && $this->fontStorage->fileExists($entity->getSVGRelativeUrl())) {
+                    $this->fontStorage->delete($entity->getSVGRelativeUrl());
+                    $this->logger->info('Font file deleted', ['file' => $entity->getSVGRelativeUrl()]);
                 }
-                if (null !== $entity->getOTFFilename()) {
-                    $otfFilePath = $this->assetPackages->getFontsPath($entity->getOTFRelativeUrl());
-                    $this->logger->info('Font file deleted', ['file' => $otfFilePath]);
-                    $fileSystem->remove($otfFilePath);
+                if (null !== $entity->getOTFFilename() && $this->fontStorage->fileExists($entity->getOTFRelativeUrl())) {
+                    $this->fontStorage->delete($entity->getOTFRelativeUrl());
+                    $this->logger->info('Font file deleted', ['file' => $entity->getOTFRelativeUrl()]);
                 }
-                if (null !== $entity->getEOTFilename()) {
-                    $eotFilePath = $this->assetPackages->getFontsPath($entity->getEOTRelativeUrl());
-                    $this->logger->info('Font file deleted', ['file' => $eotFilePath]);
-                    $fileSystem->remove($eotFilePath);
+                if (null !== $entity->getEOTFilename() && $this->fontStorage->fileExists($entity->getEOTRelativeUrl())) {
+                    $this->fontStorage->delete($entity->getEOTRelativeUrl());
+                    $this->logger->info('Font file deleted', ['file' => $entity->getEOTRelativeUrl()]);
                 }
-                if (null !== $entity->getWOFFFilename()) {
-                    $woffFilePath = $this->assetPackages->getFontsPath($entity->getWOFFRelativeUrl());
-                    $this->logger->info('Font file deleted', ['file' => $woffFilePath]);
-                    $fileSystem->remove($woffFilePath);
+                if (null !== $entity->getWOFFFilename() && $this->fontStorage->fileExists($entity->getWOFFRelativeUrl())) {
+                    $this->fontStorage->delete($entity->getWOFFRelativeUrl());
+                    $this->logger->info('Font file deleted', ['file' => $entity->getWOFFRelativeUrl()]);
                 }
-                if (null !== $entity->getWOFF2Filename()) {
-                    $woff2FilePath = $this->assetPackages->getFontsPath($entity->getWOFF2RelativeUrl());
-                    $this->logger->info('Font file deleted', ['file' => $woff2FilePath]);
-                    $fileSystem->remove($woff2FilePath);
+                if (null !== $entity->getWOFF2Filename() && $this->fontStorage->fileExists($entity->getWOFF2RelativeUrl())) {
+                    $this->fontStorage->delete($entity->getWOFF2RelativeUrl());
+                    $this->logger->info('Font file deleted', ['file' => $entity->getWOFF2RelativeUrl()]);
                 }
 
                 /*
                  * Removing font folder if empty.
                  */
-                $fontFolderPath = $this->assetPackages->getFontsPath($entity->getFolder());
-                if ($fileSystem->exists($fontFolderPath)) {
-                    $isDirEmpty = !(new \FilesystemIterator($fontFolderPath))->valid();
+                $fontFolder = $entity->getFolder();
+                if ($this->fontStorage->directoryExists($fontFolder)) {
+                    $dirListing = $this->fontStorage->listContents($fontFolder);
+                    $isDirEmpty = \count($dirListing->toArray()) <= 0;
                     if ($isDirEmpty) {
-                        $this->logger->info('Font folder is empty, deleting…', ['folder' => $fontFolderPath]);
-                        $fileSystem->remove($fontFolderPath);
+                        $this->logger->info('Font folder is empty, deleting…', ['folder' => $fontFolder]);
+                        $this->fontStorage->deleteDirectory($fontFolder);
                     }
                 }
-            } catch (IOException $e) {
+            } catch (FilesystemException $e) {
                 //do nothing
             }
         }
     }
 
-    /**
-     * @param \RZ\Roadiz\FontBundle\Entity\Font $font
-     */
     public function setFontFilesNames(Font $font)
     {
         if ($font->getHash() == "") {
@@ -173,30 +159,30 @@ final class FontLifeCycleSubscriber implements EventSubscriber
     }
 
     /**
-     * @param \RZ\Roadiz\FontBundle\Entity\Font $font
+     * @param Font $font
+     * @return void
+     * @throws FilesystemException
      */
-    public function upload(Font $font)
+    public function upload(Font $font): void
     {
-        $fontFolderPath = $this->assetPackages->getFontsPath($font->getFolder());
-
         if (null !== $font->getSvgFile()) {
-            $font->getSvgFile()->move($fontFolderPath, $font->getSVGFilename());
+            $this->fontStorage->write($font->getSVGRelativeUrl(), \file_get_contents($font->getSvgFile()->getPathname()));
             $font->setSvgFile(null);
         }
         if (null !== $font->getOtfFile()) {
-            $font->getOtfFile()->move($fontFolderPath, $font->getOTFFilename());
+            $this->fontStorage->write($font->getOTFRelativeUrl(), \file_get_contents($font->getOtfFile()->getPathname()));
             $font->setOtfFile(null);
         }
         if (null !== $font->getEotFile()) {
-            $font->getEotFile()->move($fontFolderPath, $font->getEOTFilename());
+            $this->fontStorage->write($font->getEOTRelativeUrl(), \file_get_contents($font->getEotFile()->getPathname()));
             $font->setEotFile(null);
         }
         if (null !== $font->getWoffFile()) {
-            $font->getWoffFile()->move($fontFolderPath, $font->getWOFFFilename());
+            $this->fontStorage->write($font->getWOFFRelativeUrl(), \file_get_contents($font->getWoffFile()->getPathname()));
             $font->setWoffFile(null);
         }
         if (null !== $font->getWoff2File()) {
-            $font->getWoff2File()->move($fontFolderPath, $font->getWOFF2Filename());
+            $this->fontStorage->write($font->getWOFF2RelativeUrl(), \file_get_contents($font->getWoff2File()->getPathname()));
             $font->setWoff2File(null);
         }
     }

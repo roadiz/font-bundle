@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace RZ\Roadiz\FontBundle\Controller;
 
 use Doctrine\Persistence\ManagerRegistry;
-use RZ\Roadiz\Documents\Models\FileAwareInterface;
-use RZ\Roadiz\Documents\Packages;
+use League\Flysystem\FilesystemException;
+use League\Flysystem\FilesystemOperator;
 use RZ\Roadiz\FontBundle\Entity\Font;
 use RZ\Roadiz\FontBundle\Repository\FontRepository;
 use Symfony\Component\HttpFoundation\Request;
@@ -15,21 +15,53 @@ use Twig\Environment;
 
 final class FontFaceController
 {
-    private FileAwareInterface $fileAware;
     private ManagerRegistry $managerRegistry;
     private Environment $templating;
-    private Packages $packages;
+    private FilesystemOperator $fontStorage;
 
     public function __construct(
-        FileAwareInterface $fileAware,
+        FilesystemOperator $fontStorage,
         ManagerRegistry $managerRegistry,
         Environment $templating,
-        Packages $packages
     ) {
-        $this->fileAware = $fileAware;
         $this->managerRegistry = $managerRegistry;
         $this->templating = $templating;
-        $this->packages = $packages;
+        $this->fontStorage = $fontStorage;
+    }
+
+    private function getFontData(Font $font, string $extension): ?array
+    {
+        try {
+            return match ($extension) {
+                'eot' => [
+                    $this->fontStorage->read($font->getEOTRelativeUrl()),
+                    Font::MIME_EOT
+                ],
+                'woff' => [
+                    $this->fontStorage->read($font->getWOFFRelativeUrl()),
+                    Font::MIME_WOFF
+                ],
+                'woff2' => [
+                    $this->fontStorage->read($font->getWOFF2RelativeUrl()),
+                    Font::MIME_WOFF2
+                ],
+                'svg' => [
+                    $this->fontStorage->read($font->getSVGRelativeUrl()),
+                    Font::MIME_SVG
+                ],
+                'otf' => [
+                    $this->fontStorage->read($font->getOTFRelativeUrl()),
+                    Font::MIME_OTF
+                ],
+                'ttf' => [
+                    $this->fontStorage->read($font->getOTFRelativeUrl()),
+                    Font::MIME_TTF
+                ],
+                default => null,
+            };
+        } catch (FilesystemException $exception) {
+            return null;
+        }
     }
 
     /**
@@ -48,42 +80,13 @@ final class FontFaceController
         /** @var FontRepository $repository */
         $repository = $this->managerRegistry->getRepository(Font::class);
         $lastMod = $repository->getLatestUpdateDate();
-        /** @var \RZ\Roadiz\FontBundle\Entity\Font $font */
+        /** @var Font $font */
         $font = $repository->findOneBy(['hash' => $filename, 'variant' => $variant]);
 
         if (null !== $font) {
-            switch ($extension) {
-                case 'eot':
-                    $fontpath = $this->packages->getFontsPath($font->getEOTRelativeUrl());
-                    $mime = Font::MIME_EOT;
-                    break;
-                case 'woff':
-                    $fontpath = $this->packages->getFontsPath($font->getWOFFRelativeUrl());
-                    $mime = Font::MIME_WOFF;
-                    break;
-                case 'woff2':
-                    $fontpath = $this->packages->getFontsPath($font->getWOFF2RelativeUrl());
-                    $mime = Font::MIME_WOFF2;
-                    break;
-                case 'svg':
-                    $fontpath = $this->packages->getFontsPath($font->getSVGRelativeUrl());
-                    $mime = Font::MIME_SVG;
-                    break;
-                case 'otf':
-                    $mime = Font::MIME_OTF;
-                    $fontpath = $this->packages->getFontsPath($font->getOTFRelativeUrl());
-                    break;
-                case 'ttf':
-                    $mime = Font::MIME_TTF;
-                    $fontpath = $this->packages->getFontsPath($font->getOTFRelativeUrl());
-                    break;
-                default:
-                    $fontpath = null;
-                    $mime = "application/octet-stream";
-                    break;
-            }
+            [$fontData, $mime] = $this->getFontData($font, $extension);
 
-            if (null !== $fontpath && file_exists($fontpath) && is_file($fontpath)) {
+            if (null !== $fontData) {
                 $response = new Response(
                     '',
                     Response::HTTP_NOT_MODIFIED,
@@ -97,7 +100,7 @@ final class FontFaceController
                     'public' => true,
                 ]);
                 if (!$response->isNotModified($request)) {
-                    $response->setContent(file_get_contents($fontpath));
+                    $response->setContent($fontData);
                     $response->setStatusCode(Response::HTTP_OK);
                     $response->setEtag(md5($response->getContent()));
                 }
@@ -124,7 +127,7 @@ final class FontFaceController
      */
     public function fontFacesAction(Request $request): Response
     {
-        /** @var \RZ\Roadiz\FontBundle\Repository\FontRepository $repository */
+        /** @var FontRepository $repository */
         $repository = $this->managerRegistry->getRepository(Font::class);
         $lastMod = $repository->getLatestUpdateDate();
 
@@ -151,12 +154,11 @@ final class FontFaceController
         $assignation = [
             'fonts' => [],
         ];
-        /** @var \RZ\Roadiz\FontBundle\Entity\Font $font */
+        /** @var Font $font */
         foreach ($fonts as $font) {
             $variantHash = $font->getHash() . $font->getVariant();
             $assignation['fonts'][] = [
                 'font' => $font,
-                'fontFolder' => $this->fileAware->getFontsFilesBasePath(),
                 'variantHash' => $variantHash,
             ];
         }
