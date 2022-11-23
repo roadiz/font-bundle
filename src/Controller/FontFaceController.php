@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace RZ\Roadiz\FontBundle\Controller;
 
 use Doctrine\Persistence\ManagerRegistry;
-use RZ\Roadiz\Core\Models\FileAwareInterface;
+use RZ\Roadiz\Documents\Models\FileAwareInterface;
+use RZ\Roadiz\Documents\Packages;
 use RZ\Roadiz\FontBundle\Entity\Font;
 use RZ\Roadiz\FontBundle\Repository\FontRepository;
-use RZ\Roadiz\Utils\Asset\Packages;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Twig\Environment;
@@ -20,12 +20,6 @@ final class FontFaceController
     private Environment $templating;
     private Packages $packages;
 
-    /**
-     * @param FileAwareInterface $fileAware
-     * @param ManagerRegistry $managerRegistry
-     * @param Environment $templating
-     * @param Packages $packages
-     */
     public function __construct(
         FileAwareInterface $fileAware,
         ManagerRegistry $managerRegistry,

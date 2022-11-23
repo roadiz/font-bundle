@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\FontBundle\TwigExtension;
 
+use RZ\Roadiz\Documents\Packages;
 use RZ\Roadiz\FontBundle\Entity\Font;
-use RZ\Roadiz\Utils\Asset\Packages;
 use Twig\Error\RuntimeError;
 use Twig\Extension\AbstractExtension;
 use Twig\TwigFilter;

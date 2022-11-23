@@ -6,10 +6,10 @@ namespace RZ\Roadiz\FontBundle\Controller\Admin;
 
 use JMS\Serializer\SerializerInterface;
 use RZ\Roadiz\Core\AbstractEntities\PersistableInterface;
-use RZ\Roadiz\FontBundle\Event\Font\PreUpdatedFontEvent;
+use RZ\Roadiz\Documents\Packages;
 use RZ\Roadiz\FontBundle\Entity\Font;
+use RZ\Roadiz\FontBundle\Event\Font\PreUpdatedFontEvent;
 use RZ\Roadiz\FontBundle\Form\FontType;
-use RZ\Roadiz\Utils\Asset\Packages;
 use RZ\Roadiz\Utils\StringHandler;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -19,9 +19,6 @@ use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Contracts\EventDispatcher\Event;
 use Themes\Rozier\Controllers\AbstractAdminController;
 
-/**
- * @package Themes\Rozier\Controllers
- */
 class FontsController extends AbstractAdminController
 {
     private Packages $packages;

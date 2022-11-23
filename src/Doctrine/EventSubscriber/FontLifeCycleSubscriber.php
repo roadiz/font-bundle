@@ -8,15 +8,13 @@ use Doctrine\Common\EventSubscriber;
 use Doctrine\ORM\Events;
 use Doctrine\Persistence\Event\LifecycleEventArgs;
 use Psr\Log\LoggerInterface;
+use RZ\Roadiz\Documents\Packages;
 use RZ\Roadiz\FontBundle\Entity\Font;
-use RZ\Roadiz\Utils\Asset\Packages;
 use Symfony\Component\Filesystem\Exception\IOException;
 use Symfony\Component\Filesystem\Filesystem;
 
 /**
  * Handle file management on Fonts lifecycle events.
- *
- * @package Roadiz\Core\Events
  */
 final class FontLifeCycleSubscriber implements EventSubscriber
 {
