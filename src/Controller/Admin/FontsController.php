@@ -176,10 +176,10 @@ class FontsController extends AbstractAdminController
             $zip->close();
             $filename = StringHandler::slugify($font->getName() . ' ' . $font->getReadableVariant()) . '.zip';
 
-            return new BinaryFileResponse($file, Response::HTTP_OK, [
+            return (new BinaryFileResponse($file, Response::HTTP_OK, [
                 'content-type' => 'application/zip',
                 'content-disposition' => 'attachment; filename=' . $filename,
-            ], false);
+            ], false))->deleteFileAfterSend(true);
         }
 
         throw new ResourceNotFoundException();
