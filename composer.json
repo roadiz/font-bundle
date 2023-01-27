@@ -48,9 +48,6 @@
         "twig/string-extra": "*",
         "twig/twig": "^2.12|^3.0"
     },
-    "replace": {
-        "roadiz/roadiz": "*"
-    },
     "require-dev": {
         "php-coveralls/php-coveralls": "^2.4",
         "phpstan/phpstan": "^1.5.3",
