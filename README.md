@@ -1,6 +1,6 @@
 # Roadiz Font bundle
 
-[![Build Status](https://app.travis-ci.com/roadiz/font-bundle.svg?branch=main)](https://app.travis-ci.com/roadiz/font-bundle)
+![Run test status](https://github.com/roadiz/font-bundle/actions/workflows/run-test.yml/badge.svg?branch=develop)
 
 Installation
 ============
