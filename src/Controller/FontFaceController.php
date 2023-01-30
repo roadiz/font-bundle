@@ -94,11 +94,13 @@ final class FontFaceController
                         'content-type' => $mime,
                     ]
                 );
-                $response->setCache([
-                    'last_modified' => new \DateTime($lastMod),
-                    'max_age' => 60 * 60 * 48, // expires for 2 days
-                    'public' => true,
-                ]);
+                if (null !== $lastMod) {
+                    $response->setCache([
+                        'last_modified' => $lastMod,
+                        'max_age' => 60 * 60 * 48, // expires for 2 days
+                        'public' => true,
+                    ]);
+                }
                 if (!$response->isNotModified($request)) {
                     $response->setContent($fontData);
                     $response->setStatusCode(Response::HTTP_OK);
@@ -141,7 +143,7 @@ final class FontFaceController
             'public' => true,
         ];
         if (null !== $lastMod) {
-            $cacheConfig['last_modified'] = new \DateTime($lastMod);
+            $cacheConfig['last_modified'] = $lastMod;
         }
         $response->setCache($cacheConfig);
 

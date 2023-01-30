@@ -11,12 +11,14 @@ use League\Flysystem\FilesystemException;
 use League\Flysystem\FilesystemOperator;
 use Psr\Log\LoggerInterface;
 use RZ\Roadiz\FontBundle\Entity\Font;
+use Symfony\Component\HttpFoundation\File\UploadedFile;
 
 /**
  * Handle file management on Fonts lifecycle events.
  */
 final class FontLifeCycleSubscriber implements EventSubscriber
 {
+    private static array $formats = ['svg', 'otf', 'eot', 'woff', 'woff2'];
     private LoggerInterface $logger;
     private FilesystemOperator $fontStorage;
 
@@ -43,7 +45,7 @@ final class FontLifeCycleSubscriber implements EventSubscriber
     /**
      * @param LifecycleEventArgs $args
      */
-    public function prePersist(LifecycleEventArgs $args)
+    public function prePersist(LifecycleEventArgs $args): void
     {
         $entity = $args->getObject();
         // perhaps you only want to act on some "Font" entity
@@ -55,7 +57,7 @@ final class FontLifeCycleSubscriber implements EventSubscriber
     /**
      * @param LifecycleEventArgs $args
      */
-    public function preUpdate(LifecycleEventArgs $args)
+    public function preUpdate(LifecycleEventArgs $args): void
     {
         $entity = $args->getObject();
         // perhaps you only want to act on some "Font" entity
@@ -68,7 +70,7 @@ final class FontLifeCycleSubscriber implements EventSubscriber
      * @param LifecycleEventArgs $args
      * @throws FilesystemException
      */
-    public function postPersist(LifecycleEventArgs $args)
+    public function postPersist(LifecycleEventArgs $args): void
     {
         $entity = $args->getObject();
         // perhaps you only want to act on some "Font" entity
@@ -81,7 +83,7 @@ final class FontLifeCycleSubscriber implements EventSubscriber
      * @param LifecycleEventArgs $args
      * @throws FilesystemException
      */
-    public function postUpdate(LifecycleEventArgs $args)
+    public function postUpdate(LifecycleEventArgs $args): void
     {
         $entity = $args->getObject();
         // perhaps you only want to act on some "Font" entity
@@ -90,31 +92,20 @@ final class FontLifeCycleSubscriber implements EventSubscriber
         }
     }
 
-    public function preRemove(LifecycleEventArgs $args)
+    public function preRemove(LifecycleEventArgs $args): void
     {
         $entity = $args->getObject();
         // perhaps you only want to act on some "Product" entity
         if ($entity instanceof Font) {
             try {
-                if (null !== $entity->getSVGFilename() && $this->fontStorage->fileExists($entity->getSVGRelativeUrl())) {
-                    $this->fontStorage->delete($entity->getSVGRelativeUrl());
-                    $this->logger->info('Font file deleted', ['file' => $entity->getSVGRelativeUrl()]);
-                }
-                if (null !== $entity->getOTFFilename() && $this->fontStorage->fileExists($entity->getOTFRelativeUrl())) {
-                    $this->fontStorage->delete($entity->getOTFRelativeUrl());
-                    $this->logger->info('Font file deleted', ['file' => $entity->getOTFRelativeUrl()]);
-                }
-                if (null !== $entity->getEOTFilename() && $this->fontStorage->fileExists($entity->getEOTRelativeUrl())) {
-                    $this->fontStorage->delete($entity->getEOTRelativeUrl());
-                    $this->logger->info('Font file deleted', ['file' => $entity->getEOTRelativeUrl()]);
-                }
-                if (null !== $entity->getWOFFFilename() && $this->fontStorage->fileExists($entity->getWOFFRelativeUrl())) {
-                    $this->fontStorage->delete($entity->getWOFFRelativeUrl());
-                    $this->logger->info('Font file deleted', ['file' => $entity->getWOFFRelativeUrl()]);
-                }
-                if (null !== $entity->getWOFF2Filename() && $this->fontStorage->fileExists($entity->getWOFF2RelativeUrl())) {
-                    $this->fontStorage->delete($entity->getWOFF2RelativeUrl());
-                    $this->logger->info('Font file deleted', ['file' => $entity->getWOFF2RelativeUrl()]);
+                // factorize previous code with loop
+                foreach (self::$formats as $format) {
+                    $getter = 'get' . mb_strtoupper($format) . 'Filename';
+                    $relativeUrlGetter = 'get' . mb_strtoupper($format) . 'RelativeUrl';
+                    if (null !== $entity->$getter() && $this->fontStorage->fileExists($entity->$relativeUrlGetter())) {
+                        $this->fontStorage->delete($entity->$relativeUrlGetter());
+                        $this->logger->info('Font file deleted', ['file' => $entity->$relativeUrlGetter()]);
+                    }
                 }
 
                 /*
@@ -135,26 +126,18 @@ final class FontLifeCycleSubscriber implements EventSubscriber
         }
     }
 
-    public function setFontFilesNames(Font $font)
+    public function setFontFilesNames(Font $font): void
     {
         if ($font->getHash() == "") {
             $font->generateHashWithSecret('default_roadiz_secret');
         }
 
-        if (null !== $font->getSvgFile()) {
-            $font->setSVGFilename($font->getSvgFile()->getClientOriginalName());
-        }
-        if (null !== $font->getOtfFile()) {
-            $font->setOTFFilename($font->getOtfFile()->getClientOriginalName());
-        }
-        if (null !== $font->getEotFile()) {
-            $font->setEOTFilename($font->getEotFile()->getClientOriginalName());
-        }
-        if (null !== $font->getWoffFile()) {
-            $font->setWOFFFilename($font->getWoffFile()->getClientOriginalName());
-        }
-        if (null !== $font->getWoff2File()) {
-            $font->setWOFF2Filename($font->getWoff2File()->getClientOriginalName());
+        foreach (self::$formats as $format) {
+            /** @var UploadedFile|null $file */
+            $file = $font->{'get' . ucfirst($format) . 'File'}();
+            if (null !== $file) {
+                $font->{'set' . mb_strtoupper($format) . 'Filename'}($file->getClientOriginalName());
+            }
         }
     }
 
@@ -165,25 +148,24 @@ final class FontLifeCycleSubscriber implements EventSubscriber
      */
     public function upload(Font $font): void
     {
-        if (null !== $font->getSvgFile()) {
-            $this->fontStorage->write($font->getSVGRelativeUrl(), \file_get_contents($font->getSvgFile()->getPathname()));
-            $font->setSvgFile(null);
-        }
-        if (null !== $font->getOtfFile()) {
-            $this->fontStorage->write($font->getOTFRelativeUrl(), \file_get_contents($font->getOtfFile()->getPathname()));
-            $font->setOtfFile(null);
-        }
-        if (null !== $font->getEotFile()) {
-            $this->fontStorage->write($font->getEOTRelativeUrl(), \file_get_contents($font->getEotFile()->getPathname()));
-            $font->setEotFile(null);
-        }
-        if (null !== $font->getWoffFile()) {
-            $this->fontStorage->write($font->getWOFFRelativeUrl(), \file_get_contents($font->getWoffFile()->getPathname()));
-            $font->setWoffFile(null);
-        }
-        if (null !== $font->getWoff2File()) {
-            $this->fontStorage->write($font->getWOFF2RelativeUrl(), \file_get_contents($font->getWoff2File()->getPathname()));
-            $font->setWoff2File(null);
+        foreach (self::$formats as $format) {
+            /** @var UploadedFile|null $file */
+            $file = $font->{'get' . ucfirst($format) . 'File'}();
+            /** @var string|null $relativeUrl */
+            $relativeUrl =  $font->{'get' . mb_strtoupper($format) . 'RelativeUrl'}();
+            if (null !== $file && null !== $relativeUrl) {
+                $filename = $file->getPathname();
+                $fontResource = fopen($file->getPathname(), 'r');
+                if (false !== $fontResource) {
+                    $this->fontStorage->writeStream(
+                        $relativeUrl,
+                        $fontResource
+                    );
+                    $font->{'set' . ucfirst($format) . 'File'}(null);
+                    fclose($fontResource);
+                    $this->logger->info('Font file uploaded', ['file' => $relativeUrl]);
+                }
+            }
         }
     }
 }

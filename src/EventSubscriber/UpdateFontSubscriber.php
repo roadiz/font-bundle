@@ -37,7 +37,7 @@ final class UpdateFontSubscriber implements EventSubscriberInterface
     /**
      * @throws FilesystemException
      */
-    public function onPreUpdatedFont(PreUpdatedFontEvent $event)
+    public function onPreUpdatedFont(PreUpdatedFontEvent $event): void
     {
         $font = $event->getFont();
         if (null !== $font) {

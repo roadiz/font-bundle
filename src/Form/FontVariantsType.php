@@ -18,7 +18,7 @@ class FontVariantsType extends AbstractType
      * {@inheritdoc}
      * @param OptionsResolver $resolver [description]
      */
-    public function configureOptions(OptionsResolver $resolver)
+    public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setDefaults([
             'choices' => array_flip(Font::$variantToHuman),

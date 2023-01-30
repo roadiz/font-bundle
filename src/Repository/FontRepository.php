@@ -4,14 +4,15 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\FontBundle\Repository;
 
+use Doctrine\ORM\NonUniqueResultException;
+use Doctrine\ORM\NoResultException;
 use Doctrine\Persistence\ManagerRegistry;
 use RZ\Roadiz\CoreBundle\Repository\EntityRepository;
 use RZ\Roadiz\FontBundle\Entity\Font;
 use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
 /**
- * @package RZ\Roadiz\CoreBundle\Repository
- * @extends EntityRepository<\RZ\Roadiz\FontBundle\Entity\Font>
+ * @extends EntityRepository<Font>
  */
 final class FontRepository extends EntityRepository
 {
@@ -22,11 +23,15 @@ final class FontRepository extends EntityRepository
         parent::__construct($registry, Font::class, $dispatcher);
     }
 
-    public function getLatestUpdateDate()
+    /**
+     * @throws NonUniqueResultException
+     * @throws NoResultException
+     */
+    public function getLatestUpdateDate(): ?\DateTimeInterface
     {
         $query = $this->_em->createQuery('
             SELECT MAX(f.updatedAt) FROM RZ\Roadiz\FontBundle\Entity\Font f');
 
-        return $query->getSingleScalarResult();
+        return new \DateTimeImmutable($query->getSingleScalarResult());
     }
 }
