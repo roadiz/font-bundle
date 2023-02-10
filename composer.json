@@ -23,9 +23,8 @@
         "doctrine/doctrine-bundle": "^2.3",
         "doctrine/doctrine-migrations-bundle": "^3.1",
         "doctrine/orm": "^2.14.1",
-        "jms/serializer": "^3.1.1",
+        "jms/serializer": "^3.9.0",
         "league/flysystem": "^3.0",
-        "jms/serializer-bundle": "^3.10.0",
         "roadiz/models": "~2.1.0 || dev-develop",
         "roadiz/rozier": "~2.1.0 || dev-develop",
         "sensio/framework-extra-bundle": "^6.1",
@@ -46,7 +45,7 @@
         "twig/extra-bundle": "^2.12|^3.0",
         "twig/intl-extra": "*",
         "twig/string-extra": "*",
-        "twig/twig": "^2.12|^3.0"
+        "twig/twig": "^3.1"
     },
     "require-dev": {
         "php-coveralls/php-coveralls": "^2.4",
@@ -71,7 +70,8 @@
         "sort-packages": true,
         "allow-plugins": {
             "symfony/flex": false,
-            "symfony/runtime": false
+            "symfony/runtime": false,
+            "php-http/discovery": false
         }
     },
     "autoload": {
@@ -83,6 +83,11 @@
         "auto-scripts": {
             "cache:clear": "symfony-cmd",
             "assets:install %PUBLIC_DIR%": "symfony-cmd"
+        }
+    },
+    "extra": {
+        "branch-alias": {
+            "dev-develop": "2.1-dev"
         }
     }
 }
