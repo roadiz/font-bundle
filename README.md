@@ -1,6 +1,6 @@
 # Roadiz Font bundle
 
-[![Build Status](https://app.travis-ci.com/roadiz/font-bundle.svg?branch=main)](https://app.travis-ci.com/roadiz/font-bundle)
+![Run test status](https://github.com/roadiz/font-bundle/actions/workflows/run-test.yml/badge.svg?branch=develop)
 
 Installation
 ============
@@ -47,6 +47,16 @@ return [
 ## Configuration
 
 - Create folders: `var/files/fonts` for fonts storage
+- Add Flysystem storage definition
+```yaml
+# config/packages/flysystem.yaml
+flysystem:
+    storages:
+        font.storage:
+            adapter: 'local'
+            options:
+                directory: '%kernel.project_dir%/var/files/fonts'
+```
 - Copy and merge `@RoadizFontBundle/config/packages/*` files into your project `config/packages` folder
 ```yaml
 # config/routes.yaml
@@ -80,3 +90,7 @@ roadiz_rozier:
                     roles: ['ROLE_ACCESS_FONTS']
 ```
 - Perform *Doctrine Migrations* to create `fonts` table
+
+## Contributing
+
+Report [issues](https://github.com/roadiz/core-bundle-dev-app/issues) and send [Pull Requests](https://github.com/roadiz/core-bundle-dev-app/pulls) in the [main Roadiz repository](https://github.com/roadiz/core-bundle-dev-app)

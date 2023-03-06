@@ -22,11 +22,11 @@
         "doctrine/annotations": "^1.0",
         "doctrine/doctrine-bundle": "^2.3",
         "doctrine/doctrine-migrations-bundle": "^3.1",
-        "doctrine/orm": "^2.12.2",
-        "jms/serializer": "^3.1.1",
-        "jms/serializer-bundle": "^3.10.0",
-        "roadiz/models": "~2.1.0 || dev-develop",
-        "roadiz/rozier": "~2.1.0 || dev-develop",
+        "doctrine/orm": "^2.14.1",
+        "jms/serializer": "^3.9.0",
+        "league/flysystem": "^3.0",
+        "roadiz/models": "^2.2",
+        "roadiz/rozier": "^2.2",
         "sensio/framework-extra-bundle": "^6.1",
         "symfony/asset": "5.4.*",
         "symfony/cache": "5.4.*",
@@ -45,10 +45,7 @@
         "twig/extra-bundle": "^2.12|^3.0",
         "twig/intl-extra": "*",
         "twig/string-extra": "*",
-        "twig/twig": "^2.12|^3.0"
-    },
-    "replace": {
-        "roadiz/roadiz": "*"
+        "twig/twig": "^3.1"
     },
     "require-dev": {
         "php-coveralls/php-coveralls": "^2.4",
@@ -58,7 +55,12 @@
         "squizlabs/php_codesniffer": "^3.5",
         "symfony/browser-kit": "5.4.*",
         "symfony/phpunit-bridge": "5.4.*",
-        "symfony/stopwatch": "5.4.*"
+        "symfony/stopwatch": "5.4.*",
+        "roadiz/core-bundle": "^2.2",
+        "roadiz/compat-bundle": "^2.2",
+        "roadiz/rozier-bundle": "^2.2",
+        "roadiz/documents": "^2.2",
+        "roadiz/entity-generator": "^2.2"
     },
     "config": {
         "optimize-autoloader": true,
@@ -68,7 +70,8 @@
         "sort-packages": true,
         "allow-plugins": {
             "symfony/flex": false,
-            "symfony/runtime": false
+            "symfony/runtime": false,
+            "php-http/discovery": false
         }
     },
     "autoload": {
@@ -80,6 +83,12 @@
         "auto-scripts": {
             "cache:clear": "symfony-cmd",
             "assets:install %PUBLIC_DIR%": "symfony-cmd"
+        }
+    },
+    "extra": {
+        "branch-alias": {
+            "dev-main": "2.0.x-dev",
+            "dev-develop": "2.2.x-dev"
         }
     }
 }
