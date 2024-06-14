@@ -86,7 +86,7 @@ final class FontFaceController
         if (null !== $font) {
             [$fontData, $mime] = $this->getFontData($font, $extension);
 
-            if (\is_string($fontData)) {
+            if (null !== $fontData) {
                 $response = new Response(
                     '',
                     Response::HTTP_NOT_MODIFIED,
@@ -104,7 +104,7 @@ final class FontFaceController
                 if (!$response->isNotModified($request)) {
                     $response->setContent($fontData);
                     $response->setStatusCode(Response::HTTP_OK);
-                    $response->setEtag(md5($fontData));
+                    $response->setEtag(md5($response->getContent()));
                 }
 
                 return $response;
@@ -164,12 +164,13 @@ final class FontFaceController
                 'variantHash' => $variantHash,
             ];
         }
-        $content = $this->templating->render(
-            '@RoadizFont/fonts/fontfamily.css.twig',
-            $assignation
+        $response->setContent(
+            $this->templating->render(
+                '@RoadizFont/fonts/fontfamily.css.twig',
+                $assignation
+            )
         );
-        $response->setContent($content);
-        $response->setEtag(md5($content));
+        $response->setEtag(md5($response->getContent()));
         $response->setStatusCode(Response::HTTP_OK);
 
         return $response;
