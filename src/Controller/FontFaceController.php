@@ -15,11 +15,18 @@ use Twig\Environment;
 
 final class FontFaceController
 {
+    private ManagerRegistry $managerRegistry;
+    private Environment $templating;
+    private FilesystemOperator $fontStorage;
+
     public function __construct(
-        private readonly FilesystemOperator $fontStorage,
-        private readonly ManagerRegistry $managerRegistry,
-        private readonly Environment $templating,
+        FilesystemOperator $fontStorage,
+        ManagerRegistry $managerRegistry,
+        Environment $templating,
     ) {
+        $this->managerRegistry = $managerRegistry;
+        $this->templating = $templating;
+        $this->fontStorage = $fontStorage;
     }
 
     private function getFontData(Font $font, string $extension): ?array
@@ -79,7 +86,7 @@ final class FontFaceController
         if (null !== $font) {
             [$fontData, $mime] = $this->getFontData($font, $extension);
 
-            if (\is_string($fontData)) {
+            if (null !== $fontData) {
                 $response = new Response(
                     '',
                     Response::HTTP_NOT_MODIFIED,
@@ -97,7 +104,7 @@ final class FontFaceController
                 if (!$response->isNotModified($request)) {
                     $response->setContent($fontData);
                     $response->setStatusCode(Response::HTTP_OK);
-                    $response->setEtag(md5($fontData));
+                    $response->setEtag(md5($response->getContent()));
                 }
 
                 return $response;
@@ -157,12 +164,13 @@ final class FontFaceController
                 'variantHash' => $variantHash,
             ];
         }
-        $content = $this->templating->render(
-            '@RoadizFont/fonts/fontfamily.css.twig',
-            $assignation
+        $response->setContent(
+            $this->templating->render(
+                '@RoadizFont/fonts/fontfamily.css.twig',
+                $assignation
+            )
         );
-        $response->setContent($content);
-        $response->setEtag(md5($content));
+        $response->setEtag(md5($response->getContent()));
         $response->setStatusCode(Response::HTTP_OK);
 
         return $response;
