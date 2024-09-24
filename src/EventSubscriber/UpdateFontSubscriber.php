@@ -16,8 +16,11 @@ use Symfony\Component\EventDispatcher\EventSubscriberInterface;
  */
 final class UpdateFontSubscriber implements EventSubscriberInterface
 {
-    public function __construct(private readonly FontLifeCycleSubscriber $fontSubscriber)
+    private FontLifeCycleSubscriber $fontSubscriber;
+
+    public function __construct(FontLifeCycleSubscriber $fontSubscriber)
     {
+        $this->fontSubscriber = $fontSubscriber;
     }
 
     /**
