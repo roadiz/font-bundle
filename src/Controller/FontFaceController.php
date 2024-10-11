@@ -15,11 +15,18 @@ use Twig\Environment;
 
 final class FontFaceController
 {
+    private ManagerRegistry $managerRegistry;
+    private Environment $templating;
+    private FilesystemOperator $fontStorage;
+
     public function __construct(
-        private readonly FilesystemOperator $fontStorage,
-        private readonly ManagerRegistry $managerRegistry,
-        private readonly Environment $templating,
+        FilesystemOperator $fontStorage,
+        ManagerRegistry $managerRegistry,
+        Environment $templating,
     ) {
+        $this->managerRegistry = $managerRegistry;
+        $this->templating = $templating;
+        $this->fontStorage = $fontStorage;
     }
 
     private function getFontData(Font $font, string $extension): ?array
