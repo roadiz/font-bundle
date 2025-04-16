@@ -11,26 +11,17 @@ use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
 /**
  * Calls font life cycle methods when no data changed according to Doctrine.
- *
- * @package RZ\Roadiz\CoreBundle\Event
  */
-final class UpdateFontSubscriber implements EventSubscriberInterface
+final readonly class UpdateFontSubscriber implements EventSubscriberInterface
 {
-    private FontLifeCycleSubscriber $fontSubscriber;
-
-    public function __construct(FontLifeCycleSubscriber $fontSubscriber)
+    public function __construct(private FontLifeCycleSubscriber $fontSubscriber)
     {
-        $this->fontSubscriber = $fontSubscriber;
     }
 
-    /**
-     * @inheritDoc
-     */
     public static function getSubscribedEvents(): array
     {
         return [
             PreUpdatedFontEvent::class => 'onPreUpdatedFont',
-            '\RZ\Roadiz\Core\Events\Font\PreUpdatedFontEvent' => 'onPreUpdatedFont',
         ];
     }
 
