@@ -52,7 +52,7 @@ final readonly class FontFaceController
                 ],
                 default => null,
             };
-        } catch (FilesystemException) {
+        } catch (FilesystemException $exception) {
             return null;
         }
     }
