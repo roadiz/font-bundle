@@ -18,7 +18,6 @@ final readonly class UpdateFontSubscriber implements EventSubscriberInterface
     {
     }
 
-    #[\Override]
     public static function getSubscribedEvents(): array
     {
         return [
