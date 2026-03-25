@@ -14,26 +14,21 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
  */
 class FontVariantsType extends AbstractType
 {
-    /**
-     * {@inheritdoc}
-     * @param OptionsResolver $resolver [description]
-     */
+    #[\Override]
     public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setDefaults([
             'choices' => array_flip(Font::$variantToHuman),
         ]);
     }
-    /**
-     * {@inheritdoc}
-     */
+
+    #[\Override]
     public function getParent(): ?string
     {
         return ChoiceType::class;
     }
-    /**
-     * {@inheritdoc}
-     */
+
+    #[\Override]
     public function getBlockPrefix(): string
     {
         return 'font_variants';
